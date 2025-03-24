@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Mic, StopCircle, Play, AlertCircle, Loader2, Volume2 } from 'lucide-react';
+import { Mic, StopCircle, Play, AlertCircle, Loader2, Volume2, Upload } from 'lucide-react';
 import { analyzePetAudio } from '../lib/gemini';
 
 interface AudioAnalyzerProps {
@@ -15,6 +15,7 @@ export function AudioAnalyzer({ onAnalysisComplete, onError, isLoading }: AudioA
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number>();
+  const audioInputRef = useRef<HTMLInputElement>(null);
 
   const startRecording = async () => {
     try {
@@ -70,6 +71,39 @@ export function AudioAnalyzer({ onAnalysisComplete, onError, isLoading }: AudioA
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith('audio/')) {
+      onError('Please upload an audio file');
+      return;
+    }
+
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      onError('File size must be less than 10MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64Audio = e.target?.result as string;
+        setAudioURL(URL.createObjectURL(file));
+        const analysis = await analyzePetAudio(base64Audio);
+        onAnalysisComplete(analysis);
+      } catch (error) {
+        onError('Failed to analyze audio file. Please try again.');
+      }
+    };
+    reader.onerror = () => {
+      onError('Error reading audio file');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -87,14 +121,32 @@ export function AudioAnalyzer({ onAnalysisComplete, onError, isLoading }: AudioA
     <div className="rounded-lg border-2 border-dashed border-gray-300 p-6">
       <div className="flex flex-col items-center space-y-4">
         <div className="flex items-center space-x-4">
+          {/* Hidden file input for audio upload */}
+          <input
+            ref={audioInputRef}
+            type="file"
+            accept="audio/*"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+
           {!isRecording && !audioURL && (
-            <button
-              onClick={startRecording}
-              className="flex items-center space-x-2 rounded-full bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
-            >
-              <Mic className="h-5 w-5" />
-              <span>Start Recording</span>
-            </button>
+            <>
+              <button
+                onClick={startRecording}
+                className="flex items-center space-x-2 rounded-full bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
+              >
+                <Mic className="h-5 w-5" />
+                <span>Start Recording</span>
+              </button>
+              <button
+                onClick={() => audioInputRef.current?.click()}
+                className="flex items-center space-x-2 rounded-full bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
+              >
+                <Upload className="h-5 w-5" />
+                <span>Upload Audio</span>
+              </button>
+            </>
           )}
 
           {isRecording && (
@@ -135,8 +187,9 @@ export function AudioAnalyzer({ onAnalysisComplete, onError, isLoading }: AudioA
         <div className="text-center text-sm text-gray-500">
           <p className="flex items-center justify-center">
             <Volume2 className="mr-1 h-4 w-4" />
-            Record your pet's sounds for AI analysis
+            Record or upload your pet's sounds for AI analysis
           </p>
+          <p className="mt-1">Supported formats: WAV, MP3, M4A (up to 10MB)</p>
           <p className="mt-1">Maximum recording time: 30 seconds</p>
         </div>
       </div>

@@ -79,7 +79,7 @@ Format the response in clear sections with descriptive headings. Provide specifi
 
 export async function analyzePetAudio(audioData: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
     const base64Data = audioData.split(';base64,').pop();
     if (!base64Data) {
@@ -93,33 +93,33 @@ export async function analyzePetAudio(audioData: string): Promise<string> {
       return cachedResult.result;
     }
 
-    const prompt = `As a veterinary sound expert, analyze this pet audio recording and provide a detailed interpretation. Consider:
+    const prompt = `You are an AI that analyzes pet audio and determines what the pet is feeling. To analyze pet sounds, consider:
 
-1. Sound Analysis
-   - Type of vocalization (bark, meow, whine, etc.)
-   - Pitch and intensity patterns
-   - Duration and frequency of sounds
-   - Any unusual or concerning sounds
+Dogs:
+- High-pitched, short barks: Can indicate excitement, playfulness, or alertness
+- Low-pitched, growling barks: May signal a threat, warning, or defensiveness
+- Repetitive, high-pitched barks: Could be a sign of distress or fear
+- Sharp, repetitive barks: Can mean wanting something, like a treat or attention
+- Barking and stopping patterns: Might mean the dog is feeling lonely
+- Whining: Can indicate seeking attention, appeasement, or distress
+- Howling: Can be a response to sirens, music, or locating others
+- Growling: A low-pitched, rumbling sound indicating warning or threat
+- Panting: Usually indicates exertion, stress, overheating, excitement or relaxation
+- Whimpering: Can signal pain, sadness, anxiety, or desire for attention
 
-2. Emotional State
-   - Indicators of stress or anxiety
-   - Signs of contentment or happiness
-   - Level of urgency or distress
-   - Overall emotional context
+Cats:
+- Meowing: Can indicate need for attention, food, or going outside
+- Hissing: Shows fear or aggression
+- Purring: Usually contentment but can indicate pain/stress
+- Yawning: Can show boredom, relaxation, or stress
+- Spitting: Shows annoyance or discomfort
 
-3. Behavioral Context
-   - Likely triggers for the vocalization
-   - Whether the sound indicates a need or want
-   - If the sound suggests pain or discomfort
-   - Normal vs. abnormal vocalizations
+Analyze the provided audio and explain:
+1. What type of sounds you hear (pitch, duration, frequency)
+2. The likely emotional state of the pet
+3. Any recommendations based on the analysis
 
-4. Recommendations
-   - How to address any concerns identified
-   - When to seek veterinary attention
-   - Ways to reduce stress if present
-   - Training or behavioral modification suggestions
-
-Provide a clear, detailed analysis that helps pet owners understand their pet's vocalizations and any necessary actions to take.`;
+Keep the response clear and actionable for pet owners.`;
 
     const result = await model.generateContent([
       prompt,
