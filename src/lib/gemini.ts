@@ -1,6 +1,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+// Check for API key and provide helpful error if missing
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error(
+    'Missing Gemini API key. Please add VITE_GEMINI_API_KEY to your .env file.'
+  );
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
 
 // Cache for storing recent analysis results
 const analysisCache = new Map<string, { result: string; timestamp: number }>();
@@ -79,7 +87,7 @@ Format the response in clear sections with descriptive headings. Provide specifi
 
 export async function analyzePetAudio(audioData: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
     const base64Data = audioData.split(';base64,').pop();
     if (!base64Data) {
@@ -93,33 +101,47 @@ export async function analyzePetAudio(audioData: string): Promise<string> {
       return cachedResult.result;
     }
 
-    const prompt = `You are an AI that analyzes pet audio and determines what the pet is feeling. To analyze pet sounds, consider:
+    const prompt = `As an expert in pet vocalization analysis, provide a detailed breakdown of this pet audio recording. Structure your analysis as follows:
+
+1. Sound Analysis
+   - Describe the specific sounds heard (type, pitch, duration, intensity)
+   - Note any patterns or changes in the vocalizations
+   - Identify distinct vocal elements (e.g., barks, growls, whines)
+
+2. Emotional Assessment
+   - Primary emotion(s) indicated by the sounds
+   - Secondary emotional indicators
+   - Level of arousal or intensity
+   - Signs of stress or contentment
+
+3. Behavioral Context
+   - Likely triggers for these vocalizations
+   - Whether this is normal or concerning behavior
+   - What the pet might be trying to communicate
+
+4. Recommendations
+   - Specific steps owners can take to address any concerns
+   - Environmental modifications if needed
+   - When to seek professional help
+   - Training or behavioral suggestions
+
+For reference, here's how to interpret common pet vocalizations:
 
 Dogs:
-- High-pitched, short barks: Can indicate excitement, playfulness, or alertness
-- Low-pitched, growling barks: May signal a threat, warning, or defensiveness
-- Repetitive, high-pitched barks: Could be a sign of distress or fear
-- Sharp, repetitive barks: Can mean wanting something, like a treat or attention
-- Barking and stopping patterns: Might mean the dog is feeling lonely
-- Whining: Can indicate seeking attention, appeasement, or distress
-- Howling: Can be a response to sirens, music, or locating others
-- Growling: A low-pitched, rumbling sound indicating warning or threat
-- Panting: Usually indicates exertion, stress, overheating, excitement or relaxation
-- Whimpering: Can signal pain, sadness, anxiety, or desire for attention
+- Short, high-pitched barks: Excitement, playfulness, attention-seeking
+- Deep, continuous barking: Warning, territorial behavior, threat detection
+- Growling: Warning, discomfort, resource guarding, or play (context-dependent)
+- Whining: Stress, anxiety, pain, or seeking attention
+- Howling: Communication with others, response to sounds, separation anxiety
 
 Cats:
-- Meowing: Can indicate need for attention, food, or going outside
-- Hissing: Shows fear or aggression
-- Purring: Usually contentment but can indicate pain/stress
-- Yawning: Can show boredom, relaxation, or stress
-- Spitting: Shows annoyance or discomfort
+- Short meows: Greetings, acknowledgment
+- Long meows: Demands, complaints
+- Purring: Usually contentment (but can indicate stress/pain)
+- Growling/hissing: Fear, aggression, defensive behavior
+- Chirping/trilling: Excitement, greeting, attention-seeking
 
-Analyze the provided audio and explain:
-1. What type of sounds you hear (pitch, duration, frequency)
-2. The likely emotional state of the pet
-3. Any recommendations based on the analysis
-
-Keep the response clear and actionable for pet owners.`;
+Provide a clear, actionable analysis that helps owners understand and respond to their pet's vocalizations.`;
 
     const result = await model.generateContent([
       prompt,
@@ -295,6 +317,60 @@ Analyze this behavior: ${behavior}`;
     return text;
   } catch (error) {
     console.error('Error analyzing behavior:', error);
+    throw error;
+  }
+}
+
+export async function analyzeLocation(location: string): Promise<string> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    const cacheKey = `location-${location.toLowerCase().trim()}`;
+    const cachedResult = analysisCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return cachedResult.result;
+    }
+
+    const prompt = `As a pet-friendly location expert, analyze this area and provide detailed insights for pet owners. Structure the response as follows:
+
+1. Pet-Friendly Overview
+   - General assessment of pet-friendliness
+   - Notable features for pets
+   - Climate considerations for pets
+   - Common pet restrictions or regulations
+
+2. Outdoor Activities
+   - Best parks and walking trails
+   - Pet-friendly beaches or nature areas
+   - Exercise opportunities
+   - Seasonal considerations
+
+3. Pet Services
+   - Veterinary care availability
+   - Pet supply stores
+   - Grooming services
+   - Pet daycare and boarding options
+
+4. Local Tips
+   - Pet-friendly restaurants and cafes
+   - Indoor activities for bad weather
+   - Local pet communities or groups
+   - Special events or meetups
+
+Provide practical, actionable information that helps pet owners make the most of the area with their pets.
+
+Analyze this location: ${location}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
+    
+    return text;
+  } catch (error) {
+    console.error('Error analyzing location:', error);
     throw error;
   }
 }
