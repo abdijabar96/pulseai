@@ -77,6 +77,72 @@ Format the response in clear sections with descriptive headings. Provide specifi
   }
 }
 
+export async function analyzePetAudio(audioData: string): Promise<string> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    const base64Data = audioData.split(';base64,').pop();
+    if (!base64Data) {
+      throw new Error('Invalid audio data format');
+    }
+
+    const cacheKey = `audio-${base64Data.substring(0, 100)}`;
+    const cachedResult = analysisCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return cachedResult.result;
+    }
+
+    const prompt = `As a veterinary sound expert, analyze this pet audio recording and provide a detailed interpretation. Consider:
+
+1. Sound Analysis
+   - Type of vocalization (bark, meow, whine, etc.)
+   - Pitch and intensity patterns
+   - Duration and frequency of sounds
+   - Any unusual or concerning sounds
+
+2. Emotional State
+   - Indicators of stress or anxiety
+   - Signs of contentment or happiness
+   - Level of urgency or distress
+   - Overall emotional context
+
+3. Behavioral Context
+   - Likely triggers for the vocalization
+   - Whether the sound indicates a need or want
+   - If the sound suggests pain or discomfort
+   - Normal vs. abnormal vocalizations
+
+4. Recommendations
+   - How to address any concerns identified
+   - When to seek veterinary attention
+   - Ways to reduce stress if present
+   - Training or behavioral modification suggestions
+
+Provide a clear, detailed analysis that helps pet owners understand their pet's vocalizations and any necessary actions to take.`;
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType: "audio/wav",
+          data: base64Data
+        }
+      }
+    ]);
+
+    const response = await result.response;
+    const text = response.text();
+    
+    analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
+    
+    return text;
+  } catch (error) {
+    console.error('Error analyzing audio:', error);
+    throw error;
+  }
+}
+
 export async function analyzePetSymptoms(symptoms: string): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
