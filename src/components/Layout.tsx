@@ -13,7 +13,11 @@ import {
   Cookie,
   Activity,
   LineChart,
-  Heart
+  Heart,
+  Plane,
+  PawPrint,
+  BookOpenCheck,
+  Home
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -26,10 +30,13 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/analysis', icon: Camera, label: 'Pet Analysis' },
-    { path: '/services', icon: MapPin, label: 'Travel Planner' },
+    { path: '/travel', icon: Plane, label: 'Travel Planner' },
+    { path: '/services', icon: MapPin, label: 'Pet Services' },
+    { path: '/adoption', icon: Home, label: 'Adoption Centers' },
     { path: '/telehealth', icon: MessageSquare, label: 'Health Assessment' },
     { path: '/first-aid', icon: AlertTriangle, label: 'First Aid' },
     { path: '/training', icon: BookOpen, label: 'Training' },
+    { path: '/diary', icon: BookOpenCheck, label: 'Pet Diary' },
     { path: '/plant-checker', icon: Flower2, label: 'Plant Checker' },
     { path: '/treat-maker', icon: Cookie, label: 'Treat Maker' },
     { path: '/fitness', icon: Activity, label: 'Fitness' },
@@ -64,7 +71,10 @@ export default function Layout({ children }: LayoutProps) {
       >
         <div className="flex h-full flex-col">
           <div className="p-6">
-            <h1 className="text-2xl font-bold text-gray-900">Pet Care Hub</h1>
+            <div className="flex items-center space-x-2">
+              <PawPrint className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">Pet Care Hub</h1>
+            </div>
           </div>
 
           <nav className="flex-1 space-y-1 px-4">
