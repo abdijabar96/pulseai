@@ -17,7 +17,7 @@ import {
   Plane,
   PawPrint,
   BookOpenCheck,
-  Home
+  Users
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -32,7 +32,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/analysis', icon: Camera, label: 'Pet Analysis' },
     { path: '/travel', icon: Plane, label: 'Travel Planner' },
     { path: '/services', icon: MapPin, label: 'Pet Services' },
-    { path: '/adoption', icon: Home, label: 'Adoption Centers' },
+    { path: '/social', icon: Users, label: 'Pet Social' },
     { path: '/telehealth', icon: MessageSquare, label: 'Health Assessment' },
     { path: '/first-aid', icon: AlertTriangle, label: 'First Aid' },
     { path: '/training', icon: BookOpen, label: 'Training' },

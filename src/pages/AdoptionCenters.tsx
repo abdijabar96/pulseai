@@ -4,7 +4,7 @@ import { Home, Search, MapPin, Phone, Globe } from 'lucide-react';
 
 const client = new Client({
   apiKey: 'wFUgkjM3L4CHr4qDbpGhIuo2uT17pwvFDGL2oxLvApmIC55CHX',
-  secret: 'your-secret-here'
+  secret: 'Bq1AQDqGXQ4QWYhGXTZqY8HNuZpGXYEyMQkZkYQE'
 });
 
 interface Organization {

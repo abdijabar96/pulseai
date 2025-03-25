@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard';
 import PetAnalysis from './pages/PetAnalysis';
 import Services from './pages/Services';
 import TravelPlanner from './pages/TravelPlanner';
-import AdoptionCenters from './pages/AdoptionCenters';
+import SocialFeed from './pages/SocialFeed';
 import Telehealth from './pages/Telehealth';
 import FirstAid from './pages/FirstAid';
 import Training from './pages/Training';
@@ -25,7 +25,7 @@ export default function App() {
           <Route path="/analysis" element={<PetAnalysis />} />
           <Route path="/services" element={<Services />} />
           <Route path="/travel" element={<TravelPlanner />} />
-          <Route path="/adoption" element={<AdoptionCenters />} />
+          <Route path="/social" element={<SocialFeed />} />
           <Route path="/telehealth" element={<Telehealth />} />
           <Route path="/first-aid" element={<FirstAid />} />
           <Route path="/training" element={<Training />} />
