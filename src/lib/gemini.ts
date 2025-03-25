@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Check for API key and provide helpful error if missing
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 if (!apiKey) {
   throw new Error(
@@ -14,6 +13,127 @@ const genAI = new GoogleGenerativeAI(apiKey);
 const analysisCache = new Map<string, { result: string; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+export async function analyzePlant(imageData: string): Promise<string> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    const base64Data = imageData.split(';base64,').pop();
+    if (!base64Data) {
+      throw new Error('Invalid image data format');
+    }
+
+    const cacheKey = `plant-${base64Data.substring(0, 100)}`;
+    const cachedResult = analysisCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return cachedResult.result;
+    }
+
+    const prompt = `As a veterinary botanist, analyze this plant image and provide detailed information about its safety for pets. Include:
+
+1. Plant Identification
+   - Common and scientific names
+   - Key identifying features
+   - Typical growing conditions
+
+2. Pet Safety Assessment
+   - Toxicity level for dogs and cats
+   - Specific toxic compounds
+   - Affected body systems
+   - Symptoms if ingested
+
+3. Risk Level
+   - Overall danger rating
+   - Parts that are most toxic
+   - Whether toxicity varies by season
+   - Common exposure scenarios
+
+4. Safety Recommendations
+   - Whether to remove the plant
+   - Safe alternatives if toxic
+   - Prevention strategies
+   - Emergency steps if ingested
+
+Format the response in clear sections with specific, actionable advice for pet owners.`;
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: base64Data
+        }
+      }
+    ]);
+
+    const response = await result.response;
+    const text = response.text();
+    
+    analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
+    
+    return text;
+  } catch (error) {
+    console.error('Error analyzing plant:', error);
+    throw error;
+  }
+}
+
+export async function generateTreatRecipe(ingredients: string[]): Promise<string> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    const ingredientsList = ingredients.join(', ');
+    const cacheKey = `recipe-${ingredientsList}`;
+    const cachedResult = analysisCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return cachedResult.result;
+    }
+
+    const prompt = `As a pet nutritionist and treat expert, create a safe and healthy homemade pet treat recipe using some or all of these ingredients: ${ingredientsList}. Structure the response as follows:
+
+1. Recipe Overview
+   - Name of treat
+   - Difficulty level
+   - Preparation time
+   - Shelf life
+   - Suitable for (dogs/cats/both)
+
+2. Nutritional Benefits
+   - Key nutrients provided
+   - Health benefits
+   - Any dietary considerations
+
+3. Ingredients List
+   - Quantities in standard measurements
+   - Possible substitutions
+   - Ingredients to avoid
+
+4. Instructions
+   - Step-by-step preparation
+   - Cooking/baking details
+   - Storage recommendations
+
+5. Safety Notes
+   - Portion size guidelines
+   - Any restrictions
+   - Signs of allergic reactions
+
+Ensure all ingredients and preparations are safe for pets. Avoid harmful ingredients like xylitol, chocolate, raisins, etc.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
+    
+    return text;
+  } catch (error) {
+    console.error('Error generating treat recipe:', error);
+    throw error;
+  }
+}
+
 export async function analyzePetMedia(mediaData: string, isVideo: boolean): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -23,7 +143,6 @@ export async function analyzePetMedia(mediaData: string, isVideo: boolean): Prom
       throw new Error('Invalid media data format');
     }
 
-    // Generate a cache key based on the first 100 characters of the base64 data
     const cacheKey = `media-${base64Data.substring(0, 100)}`;
     const cachedResult = analysisCache.get(cacheKey);
     
@@ -75,7 +194,6 @@ Format the response in clear sections with descriptive headings. Provide specifi
     const response = await result.response;
     const text = response.text();
     
-    // Cache the result
     analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
     
     return text;
@@ -169,7 +287,6 @@ export async function analyzePetSymptoms(symptoms: string): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
-    // Generate a cache key based on the symptoms
     const cacheKey = `symptoms-${symptoms.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
     
@@ -207,7 +324,6 @@ Analyze these symptoms: ${symptoms}`;
     const response = await result.response;
     const text = response.text();
     
-    // Cache the result
     analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
     
     return text;
@@ -332,33 +448,39 @@ export async function analyzeLocation(location: string): Promise<string> {
       return cachedResult.result;
     }
 
-    const prompt = `As a pet-friendly location expert, analyze this area and provide detailed insights for pet owners. Structure the response as follows:
+    const prompt = `As a pet-friendly travel expert, analyze this location and provide detailed insights for pet owners planning to visit or travel with their pets. Structure the response as follows:
 
 1. Pet-Friendly Overview
    - General assessment of pet-friendliness
-   - Notable features for pets
    - Climate considerations for pets
    - Common pet restrictions or regulations
+   - Overall walkability and outdoor access
 
-2. Outdoor Activities
-   - Best parks and walking trails
-   - Pet-friendly beaches or nature areas
-   - Exercise opportunities
+2. Accommodation Tips
+   - Types of pet-friendly lodging available
+   - Typical pet policies and fees
+   - Recommended areas to stay
+   - Essential amenities for pet owners
+
+3. Activities & Attractions
+   - Pet-friendly outdoor spaces
+   - Indoor activities during bad weather
+   - Popular pet-friendly establishments
+   - Unique experiences for pets
+
+4. Travel Considerations
+   - Transportation options with pets
+   - Required documentation
+   - Emergency vet locations
    - Seasonal considerations
 
-3. Pet Services
-   - Veterinary care availability
+5. Local Resources
    - Pet supply stores
-   - Grooming services
-   - Pet daycare and boarding options
+   - Pet-friendly restaurants
+   - Pet daycare/boarding options
+   - Local pet communities
 
-4. Local Tips
-   - Pet-friendly restaurants and cafes
-   - Indoor activities for bad weather
-   - Local pet communities or groups
-   - Special events or meetups
-
-Provide practical, actionable information that helps pet owners make the most of the area with their pets.
+Provide practical, actionable information that helps pet owners plan their visit and make the most of the area with their pets.
 
 Analyze this location: ${location}`;
 
@@ -371,6 +493,125 @@ Analyze this location: ${location}`;
     return text;
   } catch (error) {
     console.error('Error analyzing location:', error);
+    throw error;
+  }
+}
+
+export async function generateMemorial(petInfo: {
+  name: string;
+  species: string;
+  years: number;
+  description: string;
+}): Promise<string> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    const cacheKey = `memorial-${JSON.stringify(petInfo)}`;
+    const cachedResult = analysisCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return cachedResult.result;
+    }
+
+    const prompt = `As a compassionate pet memorial writer, create a heartfelt tribute for ${petInfo.name}, a beloved ${petInfo.species} who shared ${petInfo.years} years of love and joy. Use this description as inspiration: "${petInfo.description}"
+
+Create a memorial that includes:
+
+1. A Loving Tribute
+   - Celebrate their unique personality
+   - Highlight special memories
+   - Describe their impact on their family
+   - Honor their legacy
+
+2. Special Characteristics
+   - Unique traits and behaviors
+   - Favorite activities and toys
+   - Special bonds with family members
+   - Memorable moments
+
+3. Words of Comfort
+   - Acknowledge the grief
+   - Offer gentle perspective
+   - Share wisdom about pet loss
+   - Honor the healing process
+
+4. Lasting Legacy
+   - Ways to remember them
+   - Their lasting impact
+   - Lessons they taught
+   - Their continuing influence
+
+Write with warmth, empathy, and understanding, celebrating the special bond between pets and their families.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
+    
+    return text;
+  } catch (error) {
+    console.error('Error generating memorial:', error);
+    throw error;
+  }
+}
+
+export async function analyzeGrowthData(data: {
+  age: number;
+  weight: number;
+  height?: number;
+  breed: string;
+  species: 'dog' | 'cat';
+}): Promise<string> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    const cacheKey = `growth-${JSON.stringify(data)}`;
+    const cachedResult = analysisCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return cachedResult.result;
+    }
+
+    const prompt = `As a veterinary growth specialist, analyze this ${data.species}'s growth data and provide insights. The pet is a ${data.breed}, ${data.age} months old, weighing ${data.weight}kg${data.height ? ` and ${data.height}cm tall` : ''}.
+
+Provide analysis in these sections:
+
+1. Growth Assessment
+   - Current size compared to breed standards
+   - Growth rate evaluation
+   - Projected adult size
+   - Key growth milestones
+
+2. Health Indicators
+   - Weight status (underweight/healthy/overweight)
+   - Body condition recommendations
+   - Growth pattern concerns if any
+   - Nutritional considerations
+
+3. Breed-Specific Insights
+   - Typical growth patterns
+   - Breed-specific health considerations
+   - Common growth challenges
+   - Development timeline
+
+4. Recommendations
+   - Dietary adjustments if needed
+   - Exercise guidelines
+   - Health monitoring tips
+   - When to check with vet
+
+Provide specific, actionable advice while considering breed-specific factors and growth patterns.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    analysisCache.set(cacheKey, { result: text, timestamp: Date.now() });
+    
+    return text;
+  } catch (error) {
+    console.error('Error analyzing growth data:', error);
     throw error;
   }
 }

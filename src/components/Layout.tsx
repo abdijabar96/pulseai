@@ -8,7 +8,12 @@ import {
   MapPin,
   MessageSquare,
   AlertTriangle,
-  BookOpen
+  BookOpen,
+  Flower2,
+  Cookie,
+  Activity,
+  LineChart,
+  Heart
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -21,10 +26,15 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/analysis', icon: Camera, label: 'Pet Analysis' },
-    { path: '/services', icon: MapPin, label: 'Pet Services' },
+    { path: '/services', icon: MapPin, label: 'Travel Planner' },
     { path: '/telehealth', icon: MessageSquare, label: 'Health Assessment' },
     { path: '/first-aid', icon: AlertTriangle, label: 'First Aid' },
-    { path: '/training', icon: BookOpen, label: 'Training' }
+    { path: '/training', icon: BookOpen, label: 'Training' },
+    { path: '/plant-checker', icon: Flower2, label: 'Plant Checker' },
+    { path: '/treat-maker', icon: Cookie, label: 'Treat Maker' },
+    { path: '/fitness', icon: Activity, label: 'Fitness' },
+    { path: '/growth', icon: LineChart, label: 'Growth Tracker' },
+    { path: '/memorial', icon: Heart, label: 'Memorial' }
   ];
 
   return (

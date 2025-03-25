@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { LocationInput } from '../components/LocationInput';
-import { PetServices } from '../components/PetServices';
 
 interface Location {
   latitude: number;
@@ -13,17 +12,12 @@ export default function Services() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Pet Services</h1>
+      <h1 className="text-3xl font-bold text-gray-900">Pet-Friendly Travel Planner</h1>
+      <p className="text-gray-600">
+        Find pet-friendly destinations and get detailed insights about the area.
+      </p>
       
       <LocationInput onLocationSelect={setLocation} />
-
-      {location && (
-        <PetServices
-          latitude={location.latitude}
-          longitude={location.longitude}
-          address={location.address}
-        />
-      )}
     </div>
   );
 }

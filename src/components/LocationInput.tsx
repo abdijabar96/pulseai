@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { MapPin, Search } from 'lucide-react';
-import { searchLocation } from '../lib/tomtom';
 import { analyzeLocation } from '../lib/gemini';
 
 interface LocationInputProps {
@@ -21,13 +20,36 @@ export function LocationInput({ onLocationSelect }: LocationInputProps) {
     setLocationAnalysis(undefined);
 
     try {
-      const location = await searchLocation(address);
+      // Use the Geocoding API to get coordinates
+      const geocoder = new google.maps.Geocoder();
+      const result = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+        geocoder.geocode({ address }, (results, status) => {
+          if (status === 'OK' && results?.[0]) {
+            resolve(results[0]);
+          } else {
+            reject(new Error('Location not found'));
+          }
+        });
+      });
+
+      const location = {
+        latitude: result.geometry.location.lat(),
+        longitude: result.geometry.location.lng(),
+        address: result.formatted_address
+      };
+
       onLocationSelect(location);
       
       // After getting location, analyze it with Gemini
       setIsAnalyzing(true);
       const analysis = await analyzeLocation(location.address);
       setLocationAnalysis(analysis);
+
+      // Update the map
+      const mapElement = document.getElementById('google-map') as HTMLIFrameElement;
+      if (mapElement) {
+        mapElement.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAAJXFH0gAkGSQ7Hv5VZ84jtnm2ol9tM04&q=${encodeURIComponent(location.address)}`;
+      }
     } catch (err) {
       setError('Address not found. Please try again.');
     } finally {
@@ -37,7 +59,7 @@ export function LocationInput({ onLocationSelect }: LocationInputProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="rounded-lg bg-white p-6 shadow-lg">
         <h2 className="flex items-center text-xl font-semibold text-gray-900">
           <MapPin className="mr-2 h-5 w-5 text-blue-500" />
@@ -68,6 +90,19 @@ export function LocationInput({ onLocationSelect }: LocationInputProps) {
           </div>
         )}
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      </div>
+
+      <div className="rounded-lg bg-white p-6 shadow-lg">
+        <iframe
+          id="google-map"
+          width="100%"
+          height="400"
+          style={{ border: 0 }}
+          loading="lazy"
+          allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+          src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyAAJXFH0gAkGSQ7Hv5VZ84jtnm2ol9tM04&q=New+York`}
+        ></iframe>
       </div>
 
       {locationAnalysis && (

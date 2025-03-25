@@ -7,6 +7,11 @@ import Services from './pages/Services';
 import Telehealth from './pages/Telehealth';
 import FirstAid from './pages/FirstAid';
 import Training from './pages/Training';
+import PlantChecker from './pages/PlantChecker';
+import TreatMaker from './pages/TreatMaker';
+import FitnessTracker from './pages/FitnessTracker';
+import GrowthTracker from './pages/GrowthTracker';
+import Memorial from './pages/Memorial';
 
 export default function App() {
   return (
@@ -19,6 +24,11 @@ export default function App() {
           <Route path="/telehealth" element={<Telehealth />} />
           <Route path="/first-aid" element={<FirstAid />} />
           <Route path="/training" element={<Training />} />
+          <Route path="/plant-checker" element={<PlantChecker />} />
+          <Route path="/treat-maker" element={<TreatMaker />} />
+          <Route path="/fitness" element={<FitnessTracker />} />
+          <Route path="/growth" element={<GrowthTracker />} />
+          <Route path="/memorial" element={<Memorial />} />
         </Routes>
       </Layout>
     </Router>
