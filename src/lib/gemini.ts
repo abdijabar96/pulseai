@@ -15,7 +15,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function analyzePlant(imageData: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
     
     const base64Data = imageData.split(';base64,').pop();
     if (!base64Data) {
@@ -80,7 +80,7 @@ Format the response in clear sections with specific, actionable advice for pet o
 
 export async function generateTreatRecipe(ingredients: string[]): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const ingredientsList = ingredients.join(', ');
     const cacheKey = `recipe-${ingredientsList}`;
@@ -136,7 +136,7 @@ Ensure all ingredients and preparations are safe for pets. Avoid harmful ingredi
 
 export async function analyzePetMedia(mediaData: string, isVideo: boolean): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
     
     const base64Data = mediaData.split(';base64,').pop();
     if (!base64Data) {
@@ -185,7 +185,7 @@ Format the response in clear sections with descriptive headings. Provide specifi
       prompt,
       {
         inlineData: {
-          mimeType: isVideo ? "video/webm" : "image/jpeg",
+          mimeType: isVideo ? "video/mp4" : "image/jpeg",
           data: base64Data
         }
       }
@@ -205,7 +205,7 @@ Format the response in clear sections with descriptive headings. Provide specifi
 
 export async function analyzePetAudio(audioData: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const base64Data = audioData.split(';base64,').pop();
     if (!base64Data) {
@@ -219,58 +219,35 @@ export async function analyzePetAudio(audioData: string): Promise<string> {
       return cachedResult.result;
     }
 
-    const prompt = `As an expert in pet vocalization analysis, provide a detailed breakdown of this pet audio recording. Structure your analysis as follows:
+    const prompt = `As an expert in pet vocalization analysis, analyze this audio recording and provide insights about:
 
 1. Sound Analysis
-   - Describe the specific sounds heard (type, pitch, duration, intensity)
-   - Note any patterns or changes in the vocalizations
-   - Identify distinct vocal elements (e.g., barks, growls, whines)
+   - Type of vocalization (bark, meow, whine, etc.)
+   - Pitch and intensity
+   - Pattern and frequency
+   - Duration of sounds
 
 2. Emotional Assessment
-   - Primary emotion(s) indicated by the sounds
-   - Secondary emotional indicators
-   - Level of arousal or intensity
-   - Signs of stress or contentment
+   - Primary emotion indicated
+   - Level of distress or contentment
+   - Urgency of the communication
+   - Context clues in the sound
 
 3. Behavioral Context
-   - Likely triggers for these vocalizations
-   - Whether this is normal or concerning behavior
-   - What the pet might be trying to communicate
+   - Likely reasons for this vocalization
+   - Whether this is normal or concerning
+   - Potential triggers
+   - Communication intent
 
 4. Recommendations
-   - Specific steps owners can take to address any concerns
-   - Environmental modifications if needed
+   - How to respond to this vocalization
+   - Environmental adjustments if needed
    - When to seek professional help
-   - Training or behavioral suggestions
+   - Training suggestions if relevant
 
-For reference, here's how to interpret common pet vocalizations:
+Provide clear, actionable insights that help owners understand and respond to their pet's vocalizations.`;
 
-Dogs:
-- Short, high-pitched barks: Excitement, playfulness, attention-seeking
-- Deep, continuous barking: Warning, territorial behavior, threat detection
-- Growling: Warning, discomfort, resource guarding, or play (context-dependent)
-- Whining: Stress, anxiety, pain, or seeking attention
-- Howling: Communication with others, response to sounds, separation anxiety
-
-Cats:
-- Short meows: Greetings, acknowledgment
-- Long meows: Demands, complaints
-- Purring: Usually contentment (but can indicate stress/pain)
-- Growling/hissing: Fear, aggression, defensive behavior
-- Chirping/trilling: Excitement, greeting, attention-seeking
-
-Provide a clear, actionable analysis that helps owners understand and respond to their pet's vocalizations.`;
-
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          mimeType: "audio/wav",
-          data: base64Data
-        }
-      }
-    ]);
-
+    const result = await model.generateContent([prompt, base64Data]);
     const response = await result.response;
     const text = response.text();
     
@@ -285,7 +262,7 @@ Provide a clear, actionable analysis that helps owners understand and respond to
 
 export async function analyzePetSymptoms(symptoms: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const cacheKey = `symptoms-${symptoms.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -335,7 +312,7 @@ Analyze these symptoms: ${symptoms}`;
 
 export async function getFirstAidGuidance(emergency: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const cacheKey = `firstaid-${emergency.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -385,7 +362,7 @@ Emergency situation: ${emergency}`;
 
 export async function analyzeBehavior(behavior: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const cacheKey = `behavior-${behavior.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -439,7 +416,7 @@ Analyze this behavior: ${behavior}`;
 
 export async function analyzeLocation(location: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const cacheKey = `location-${location.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -504,7 +481,7 @@ export async function generateMemorial(petInfo: {
   description: string;
 }): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const cacheKey = `memorial-${JSON.stringify(petInfo)}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -564,7 +541,7 @@ export async function analyzeGrowthData(data: {
   species: 'dog' | 'cat';
 }): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const cacheKey = `growth-${JSON.stringify(data)}`;
     const cachedResult = analysisCache.get(cacheKey);
