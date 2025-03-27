@@ -15,7 +15,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function analyzePlant(imageData: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const base64Data = imageData.split(';base64,').pop();
     if (!base64Data) {
@@ -80,7 +80,7 @@ Format the response in clear sections with specific, actionable advice for pet o
 
 export async function generateTreatRecipe(ingredients: string[]): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const ingredientsList = ingredients.join(', ');
     const cacheKey = `recipe-${ingredientsList}`;
@@ -136,7 +136,7 @@ Ensure all ingredients and preparations are safe for pets. Avoid harmful ingredi
 
 export async function analyzePetMedia(mediaData: string, isVideo: boolean): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const base64Data = mediaData.split(';base64,').pop();
     if (!base64Data) {
@@ -205,7 +205,7 @@ Format the response in clear sections with descriptive headings. Provide specifi
 
 export async function analyzePetAudio(audioData: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const base64Data = audioData.split(';base64,').pop();
     if (!base64Data) {
@@ -262,7 +262,7 @@ Provide clear, actionable insights that help owners understand and respond to th
 
 export async function analyzePetSymptoms(symptoms: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const cacheKey = `symptoms-${symptoms.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -312,7 +312,7 @@ Analyze these symptoms: ${symptoms}`;
 
 export async function getFirstAidGuidance(emergency: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const cacheKey = `firstaid-${emergency.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -362,7 +362,7 @@ Emergency situation: ${emergency}`;
 
 export async function analyzeBehavior(behavior: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const cacheKey = `behavior-${behavior.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -416,7 +416,7 @@ Analyze this behavior: ${behavior}`;
 
 export async function analyzeLocation(location: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const cacheKey = `location-${location.toLowerCase().trim()}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -481,7 +481,7 @@ export async function generateMemorial(petInfo: {
   description: string;
 }): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const cacheKey = `memorial-${JSON.stringify(petInfo)}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -541,7 +541,7 @@ export async function analyzeGrowthData(data: {
   species: 'dog' | 'cat';
 }): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const cacheKey = `growth-${JSON.stringify(data)}`;
     const cachedResult = analysisCache.get(cacheKey);
@@ -589,6 +589,88 @@ Provide specific, actionable advice while considering breed-specific factors and
     return text;
   } catch (error) {
     console.error('Error analyzing growth data:', error);
+    throw error;
+  }
+}
+
+export async function analyzePetHealth(data: any): Promise<{
+  prediction: string;
+  risks: string[];
+  recommendations: string[];
+  severity: string;
+}> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const cacheKey = `health-${JSON.stringify(data)}`;
+    const cachedResult = analysisCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return cachedResult.result as any;
+    }
+
+    const prompt = `As a veterinary AI assistant, analyze this comprehensive pet health data and provide detailed insights and predictions. The data includes:
+
+${JSON.stringify(data, null, 2)}
+
+Provide a thorough analysis covering:
+
+1. Current Health Status
+   - Overall health assessment
+   - Key health indicators
+   - Areas of concern
+   - Positive health factors
+
+2. Risk Assessment
+   - Potential health risks based on data
+   - Breed-specific concerns
+   - Age-related considerations
+   - Environmental factors
+
+3. Preventive Recommendations
+   - Lifestyle adjustments
+   - Dietary considerations
+   - Exercise modifications
+   - Environmental changes
+
+4. Monitoring Guidelines
+   - Key metrics to track
+   - Warning signs to watch
+   - Recommended check-up schedule
+   - When to seek veterinary care
+
+Format the response to include:
+- A detailed prediction narrative
+- A list of specific risk factors
+- A list of actionable recommendations
+- A severity assessment (Low, Moderate, High)
+
+Remember to emphasize that this is an AI-assisted analysis and does not replace professional veterinary care.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Parse the response into structured data
+    const sections = text.split('\n\n');
+    const prediction = sections[0];
+    const risks = sections[1].split('\n').filter(line => line.startsWith('-')).map(line => line.slice(2));
+    const recommendations = sections[2].split('\n').filter(line => line.startsWith('-')).map(line => line.slice(2));
+    const severity = sections[3].toLowerCase().includes('high') ? 'High' :
+                    sections[3].toLowerCase().includes('moderate') ? 'Moderate' : 'Low';
+
+    const structuredResult = {
+      prediction,
+      risks,
+      recommendations,
+      severity
+    };
+    
+    analysisCache.set(cacheKey, { result: structuredResult, timestamp: Date.now() });
+    
+    return structuredResult;
+  } catch (error) {
+    console.error('Error analyzing pet health:', error);
     throw error;
   }
 }

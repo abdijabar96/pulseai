@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
     "@petfinder/petfinder-js": "^1.0.6",
+    "@supabase/supabase-js": "^2.39.7",
     "@tomtom-international/web-sdk-services": "^6.25.0",
     "date-fns": "^3.3.1",
     "lucide-react": "^0.344.0",
